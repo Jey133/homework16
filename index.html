@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>homework16</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding-top: 48px;
+            margin: 0;
+        }
+        input, button {
+            font-size: 24px;
+        }
+        .note-list {
+            margin-top: 48px;
+            font-size: 20px;
+            list-style: none;
+        }
+        .note-list__item.note-list__item--completed {
+            color: grey;
+            text-decoration: line-through;
+        }
+    </style>
+</head>
+<body>
+    <form>
+        <input type="text" placeholder="Enter your note">
+        <button type="submit">Add note</button>
+    </form>
+    <ul class="note-list"></ul>
+
+<script>
+        
+const form = document.querySelector('form');
+const input = document.querySelector('input');
+const noteList = document.querySelector('ul');
+let taskList = [];
+let currentIndex = 0;
+
+form.addEventListener('submit', e => {
+    e.preventDefault();
+    if (input.value.trim()) {
+        const task = {
+            value: input.value,
+            completed: false,
+            id: currentIndex
+        };
+        currentIndex++;
+        taskList.unshift(task);
+        noteList.prepend(renderTask(task));
+    }
+    input.value = '';
+});
+
+function renderTask(taskObject) {
+    let taskItem = document.createElement('li');
+    taskItem.classList.add('note-list__item');
+    taskItem.setAttribute('data-id', taskObject.id);
+
+    let taskItemContent = document.createElement('span');  
+    taskItemContent.innerText = taskObject.value;
+
+    taskItem.appendChild(taskItemContent);
+    
+    createButton('complete', taskItem, taskObject.id);
+    createButton('remove', taskItem, taskObject.id);
+    createButton('edit', taskItem, taskObject.id);
+
+    if(taskObject.completed) {
+        taskItem.classList.add('note-list__item--completed');
+    }
+
+    if(taskObject.isEdit) {
+        let editWrapper = document.createElement('div');
+        editWrapper.setAttribute('id', 'editWrapper' + taskObject.id);
+
+        let editInput = document.createElement('input');
+        editInput.setAttribute('id', 'editInput' + taskObject.id);
+        editInput.value = taskObject.value;
+
+        editWrapper.appendChild(editInput);
+        createButton('save', editWrapper, taskObject.id);
+        createButton('cancel', editWrapper, taskObject.id);
+
+        taskItem.appendChild(editWrapper);
+    }
+
+    if (taskObject.isSave) {
+        taskItemContent.innerText = taskObject.newVal;
+        taskObject.value = taskObject.newVal;
+    }
+    return taskItem;
+}
+
+function handleClickButton (buttonId) {
+    let buttonName = buttonId.split("-")[0];
+    let parentDataId = Number(buttonId.split("-")[1]);
+
+    if (buttonName === 'complete') {
+        taskList.find(task => task.id === parentDataId).completed = true;   
+    } else if (buttonName === 'remove') {
+        taskList = taskList.filter(task => task.id !== parentDataId);
+    } else if (buttonName === 'edit') {
+        taskList.find(task => task.id === parentDataId).isEdit = true;
+    } else if (buttonName === 'save') {
+        let currentTask = taskList.find(task => task.id === parentDataId);
+        currentTask.isEdit = false;
+        currentTask.isSave = true;
+        currentTask.newVal = document.getElementById('editInput' + parentDataId).value;
+    } else if (buttonName === 'cancel') {
+        taskList.find(task => task.id === parentDataId).isEdit = false;
+    }
+    noteList.innerHTML = '';
+    taskList.forEach(task => {
+        noteList.append(renderTask(task));
+    });
+};
+
+function createButton (buttonName, parentElem, parentDataId) {
+    let buttonId = "'" + buttonName + "-" + parentDataId + "'";
+    let button = document.createElement('button');
+    button.classList.add(buttonName);
+    button.innerText = buttonName;
+    button.setAttribute('data-id', buttonId);
+    button.setAttribute('onclick', 'handleClickButton('+buttonId+')');
+    parentElem.appendChild(button);
+};
+
+</script>
+</body>
+</html>
